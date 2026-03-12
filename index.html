@@ -1,6 +1,3 @@
-HTTP/1.0 200 OK
-Content-Type: text/html
-
 <!DOCTYPE html>
 
 <html lang="en">
@@ -8,9 +5,41 @@ Content-Type: text/html
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Porkchop</title>
+    <style>
+        body {
+            margin: 50px;
+            font-family: "Courier New", Courier, monospace;
+            background-color: #000020;
+            color: #FFFFFF;
+        }
+        .header {
+            text-align: center;
+            font-size: 2em;
+            border-width: 2px;
+            border-color: #2649b9;
+            padding: 2px;
+            border-style: solid;
+            color: #0c0cc2;
+            margin-bottom: 50px;
+        }
+    </style>
 </head>
 <body>
-    Test
+    <div class="header">
+        <h1>Test</h1>
+    </div>
+    <div class="dropdown">
+        <label for="origin">Select Origin:</label>
+        <select name="origin" id="origin">
+            <option value="mercury">Mercury</option>
+            <option value="venus">Venus</option>
+            <option value="earth">Earth</option>
+        </select>
+    </div>
+    <p id="result">No Result</p>
+    <input id="itest"></input>
+    <button id="test">Default</button>
+    <script src="index.js"></script>
+    <script type="module">import init from "./pkg/porkchop.js"</script>
 </body>
 </html>
-aaaaaaaaaaaaaaaaaaaaaaab

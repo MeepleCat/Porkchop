@@ -1,6 +1,81 @@
 #include <winsock2.h> 
 #include <Windows.h>
 #include <stdio.h>
+#include <string.h>
+
+char* determineContentType(char* s, int i) {
+  if(strncmp(6 + s + i, "html", 4) == 0) return "text/html";
+  if(strncmp(6 + s + i, "js", 2) == 0) return "application/javascript";
+  if(strncmp(6 + s + i, "wasm", 4) == 0) return "application/wasm";
+  if(strncmp(6 + s + i, "ico", 3) == 0) return "image/x-icon";
+  
+  return "ERR";
+}
+
+int respond(SOCKET c, char* s) {
+  if(memcmp(s, "GET /", 5) == 0) {
+    int indexspace = 0;
+    int indexdot = 0;
+
+    while(indexspace <= 0) {
+      if(s[5 + (indexspace * -1)] == ' ') indexspace *= -1;
+      else if(s[5 + (indexspace) * -1] == '.' && indexdot <= 0) { 
+        indexspace--; 
+        indexdot *= -1;
+      }
+      else {
+        indexspace--;
+        if(indexdot <= 0) indexdot--;
+      }
+    }
+    
+    char* fname;
+    FILE* f;
+    char* code;
+
+    const char* ext = determineContentType(s, indexdot);  
+    if(strncmp(ext, "ERR", 3) == 0) {
+      code = "400 Bad Request";
+      fname = "error.html";
+      ext = "text/html";
+    }
+    else {
+      code = "200 OK";
+      fname = malloc(indexspace + 1);
+      strncpy(fname, s + 5, indexspace);
+      fname[indexspace] = '\0';
+    }
+
+    f = fopen(fname, "rb");
+    
+    fseek(f, 0L, SEEK_END);
+    long size = ftell(f);
+    rewind(f);
+
+    char* buffer = (char*)malloc(size + 1);
+    size_t bytesRead = fread(buffer, 1, size, f);
+    fclose(f);
+
+    char headers[256];
+    int header_len = sprintf(headers,
+            "HTTP/1.1 %s\r\n"
+            "Content-Type: %s\r\n"
+            "Content-Length: %zu"
+            "Connection: close"
+            "\r\n\r\n",
+            code,
+            ext,
+            bytesRead);
+
+    send(c, headers, header_len, 0);
+    send(c, buffer, bytesRead, 0);
+
+    free(fname); free(buffer);
+
+    return 1;
+  }
+  else return -1;
+}
 
 int main() {
   WSADATA wsadata;
@@ -10,55 +85,25 @@ int main() {
   struct sockaddr_in addr; 
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = 0;
-  addr.sin_port = htons(8080); // port server is on 
+  addr.sin_port = htons(36540); // port server is on 
   bind(s, (const struct sockaddr*)&addr, sizeof(addr));
 
-  while(1) {
-    listen(s , 10);
-  
+  listen(s , 10);
+
+  while(1) {  
     SOCKET client = accept(s, 0, 0);
-
-    char request[256] = {0};
-    recv(client, request, 256, 0);
-
-    // GET /[file] ...
-    if(memcmp(request, "GET / ", 6) == 0) {
-      FILE* f = fopen("index.html", "r");
-      char buffer[256] = {0};
-      fread(buffer, 1, 256, f);
-      send(client, buffer, 256, 0);
+    printf("Client connected!\n");
+    
+    char request[1024] = {0};
+    int bytesReceived = recv(client, request, sizeof(request) - 1, 0);
+    if (bytesReceived <= 0) {
+        closesocket(client);
+        continue;
     }
+    request[bytesReceived] = '\0';
+    printf("Request:\n%s\n", request);
+
+    respond(client, request);
+    closesocket(client);
   }
 }
-
-/*(int main(void)
-{
-  printf("test...\n");
-
-  CURL *curl;
- 
-  CURLcode result = curl_global_init(CURL_GLOBAL_ALL);
-  if(result != CURLE_OK)
-    return (int)result;
- 
-  curl = curl_easy_init();
-  if(1 == 2) {
-  //if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, "https://ssd.jpl.nasa.gov/api/horizons.api?format=json&COMMAND='399'&CENTER='500@10'&EPHEM_TYPE=VECTORS&START_TIME='2026-03-01'&STOP_TIME='2026-03-02'&STEP_SIZE='1h'");
-    /* example.com is redirected, so we tell libcurl to follow redirection */
-    //curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    //curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "name=daniel&project=curl");
-
-    /* Perform the request, result gets the return code *//*
-    result = curl_easy_perform(curl);
-    /* Check for errors *//*
-    if(result != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(result));
- 
-    /* always cleanup *//*
-    curl_easy_cleanup(curl);
-  }
-  curl_global_cleanup();
-  return 0;
-}*/
