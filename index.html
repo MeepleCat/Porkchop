@@ -5,24 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Porkchop</title>
-    <style>
-        body {
-            margin: 50px;
-            font-family: "Courier New", Courier, monospace;
-            background-color: #000020;
-            color: #FFFFFF;
-        }
-        .header {
-            text-align: center;
-            font-size: 2em;
-            border-width: 2px;
-            border-color: #2649b9;
-            padding: 2px;
-            border-style: solid;
-            color: #0c0cc2;
-            margin-bottom: 50px;
-        }
-    </style>
+    <link rel="stylesheet" href="/styles.css">
+    
 </head>
 <body>
     <div class="header">
@@ -37,9 +21,21 @@
         </select>
     </div>
     <p id="result">No Result</p>
-    <input id="itest"></input>
+    <input id="itest"/>
     <button id="test">Default</button>
+    <div class="container">
+        <div class="column">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+        </div>
+        <div class="column">
+            <img src="favicon.ico" class="plot"/>
+        </div>
+    </div>
     <script src="index.js"></script>
-    <script type="module">import init from "./pkg/porkchop.js"</script>
-</body>
+    <script type="module">
+        import init from "./pkg/porkchop.js";
+        async function run() { await init(); }
+        run();
+    </script>
+    </body>
 </html>

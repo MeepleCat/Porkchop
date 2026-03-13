@@ -8,6 +8,7 @@ char* determineContentType(char* s, int i) {
   if(strncmp(6 + s + i, "js", 2) == 0) return "application/javascript";
   if(strncmp(6 + s + i, "wasm", 4) == 0) return "application/wasm";
   if(strncmp(6 + s + i, "ico", 3) == 0) return "image/x-icon";
+  if(strncmp(6 + s + i, "css", 3) == 0) return "text/css";
   
   return "ERR";
 }
@@ -32,16 +33,19 @@ int respond(SOCKET c, char* s) {
     char* fname;
     FILE* f;
     char* code;
+    int needsFreeing = 0;
 
     const char* ext = determineContentType(s, indexdot);  
     if(strncmp(ext, "ERR", 3) == 0) {
       code = "400 Bad Request";
       fname = "error.html";
       ext = "text/html";
+      printf("ERR BAD REQUEST\n");
     }
     else {
       code = "200 OK";
       fname = malloc(indexspace + 1);
+      needsFreeing = 1;
       strncpy(fname, s + 5, indexspace);
       fname[indexspace] = '\0';
     }
@@ -70,7 +74,9 @@ int respond(SOCKET c, char* s) {
     send(c, headers, header_len, 0);
     send(c, buffer, bytesRead, 0);
 
-    free(fname); free(buffer);
+    if(needsFreeing) free(fname); free(buffer);
+
+    printf("SENT\n-------------------------\n%s", headers);
 
     return 1;
   }
@@ -92,16 +98,15 @@ int main() {
 
   while(1) {  
     SOCKET client = accept(s, 0, 0);
-    printf("Client connected!\n");
     
     char request[1024] = {0};
     int bytesReceived = recv(client, request, sizeof(request) - 1, 0);
     if (bytesReceived <= 0) {
+        printf("no bytes\n");
         closesocket(client);
         continue;
     }
     request[bytesReceived] = '\0';
-    printf("Request:\n%s\n", request);
 
     respond(client, request);
     closesocket(client);
